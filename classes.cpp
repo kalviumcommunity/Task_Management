@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <regex>
 
 using namespace std; // Adding the namespace std
 
@@ -10,20 +11,50 @@ private:
     string title;
     string description;
     bool completed;
-    
+    int priority;
+    string deadline;
+
    
-
 public:
-    Task(const string& t, const string& desc)
-        : title(t), description(desc), completed(false) {}
+    Task(){
+          cout<<"Constructor of task class runned" << endl;
+    }
+     Task(const string& t, const string& desc, const string& dl, int priority = 0)
+        : title(t), description(desc), completed(false), deadline(dl), priority(priority) {}
 
-    void markAsCompleted() {
-        completed = true;
+
+        void markAsCompleted() {
+        this->completed = true;
+    }
+
+    void markAsIncomplete() {
+        this->completed = false;
+    }
+
+
+     bool isCompleted() const {
+        return completed;
     }
     void display() {
-        cout << "Title: " << title << endl;
-        cout << "Description: " << description << endl;
-        cout << "Status: " << (completed ? "Completed" : "Incomplete") << endl;
+        cout << "Title: " << this->title << endl;
+        cout << "Description: " << this->description << endl;
+        cout << "Priority: " << this->priority << endl;
+        cout << "Deadline: " << this->deadline << endl;
+        cout << "Status: " << (this->completed ? "Completed" : "Incomplete") << endl;
+    }
+
+
+ // Validate and set the deadline
+    bool setDeadline(const string& newDeadline) {
+        // Define a regex pattern for DD-MM-YYYY format
+        regex pattern("^(0[1-9]|[1-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-[0-9]{4}$");
+
+        if (regex_match(newDeadline, pattern)) {
+            this->deadline = newDeadline;
+            return true; // Deadline updated successfully
+        } else {
+            return false; // Invalid deadline format
+        }
     }
 };
 
@@ -39,7 +70,8 @@ public:
     void addTask(const Task& task) {
         tasks.push_back(task);
     }
-
+   
+// display all the tasks
     void displayTasks() {
         cout << "Tasks in Category: " << name << endl;
         for ( Task& task : tasks) {
@@ -47,7 +79,7 @@ public:
             cout << "-----------------------" << endl;
         }
     }
-
+// returns the name of the category here
     string getName() const { 
         return name;
     }
@@ -60,10 +92,14 @@ private:
     vector<TaskCategory> categories;
 
 public:
-    User(const string& uname) : username(uname) {}
+    User(const string& uname) : username(uname) { }
 
     void addCategory(const string& categoryName) {
         categories.emplace_back(categoryName);
+    }
+
+     ~ User(){
+        cout<<"destructor run" << endl;
     }
 
     TaskCategory* getCategory(const string& categoryName) {
@@ -83,6 +119,7 @@ public:
 int main() {
     string username;
     
+
     // Prompt the user to enter their username
     cout << "Enter your username: ";
     cin >> username;
@@ -94,29 +131,74 @@ int main() {
     user.addCategory("Work");
     user.addCategory("Personal");
 
-    // Create tasks and add them to categories
-    Task task1("Finish Report", "Complete the quarterly report");
-    Task task2("Grocery Shopping", "Buy groceries for the week");
+    // Input tasks interactively
+    cout << "Enter task details for Work:" << endl;
+    string title, description, deadline;
+    int priority;
+
+    cout << "Title: ";
+    cin.ignore(); // Clear newline character
+    getline(cin, title);
+
+    cout << "Description: ";
+    getline(cin, description);
+
+    // Input priority with validation
+   do {
+    cout << "Priority (0-5): ";
+    cin >> priority;
+
+    if (cin.fail()) {
+        cout << "Invalid input. Please enter a numeric value." << endl;
+        cin.clear(); // Clear error flags
+
+        // Discard characters until a newline is encountered
+        while (cin.get() != '\n') {
+            continue; // Keep discarding characters
+        }
+    } else if (priority < 0 || priority > 5) {
+        cout << "Priority must be between 0 and 5." << endl;
+    } else {
+        break; // Exit the loop when valid input is provided
+    }
+} while (true);
+
+
+
+    bool validDeadline = false;
+    
+    // Input deadline with validation
+   do {
+    cout << "Deadline (DD-MM-YYYY): ";
+    cin >> deadline;
+
+    validDeadline = Task().setDeadline(deadline);
+
+    if (!validDeadline) {
+        cout << "Invalid deadline format. Please use DD-MM-YYYY format." << endl;
+        cin.clear(); // Clear error flags
+
+        // Clear input buffer until a newline character is encountered
+        while (cin.get() != '\n') {
+            continue; // Keep discarding characters
+        }
+    }
+} while (!validDeadline);
+
+
 
     TaskCategory* workCategory = user.getCategory("Work");
-    TaskCategory* personalCategory = user.getCategory("Personal");
+    Task task1(title, description, deadline, priority);
 
     if (workCategory) {
         workCategory->addTask(task1);
     }
 
-    if (personalCategory) {
-        personalCategory->addTask(task2);
-    }
-
-    // Display tasks in categories
+       // Display tasks in the "Work" category after status changes
     if (workCategory) {
         workCategory->displayTasks();
     }
 
-    if (personalCategory) {
-        personalCategory->displayTasks();
-    }
 
     return 0;
 }
