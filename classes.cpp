@@ -5,9 +5,14 @@
 
 using namespace std;
 
+class Printable {
+    public:
+    virtual void print()  const = 0 ; // Pure virtual function
+    virtual ~Printable() {}  // Virtual destructor for proper polymorphic destruction
 
+};
 
-class Task {
+class Task : public Printable {
 private:
     string title;
     string description;
@@ -44,6 +49,11 @@ public:
             return false;
         }
     }
+    // Implementation of the pure virtual function from the Printable abstract class
+    void print() const override {
+        display();
+    }
+
 };
 
 class TaskCategory {
